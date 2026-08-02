@@ -129,6 +129,27 @@ hr.rule{border:0;border-top:1px solid var(--line);margin:40px 0}
 .rung p{margin:7px 0 0;color:var(--muted);font-size:14.5px;max-width:70ch}
 .rung.empty h4{color:var(--muted);opacity:.4}
 
+/* ---------- leveling ---------- */
+.gate{display:grid;gap:0;border-top:1px solid var(--line)}
+.gaterow{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:18px;border-bottom:1px solid var(--line);padding:14px 0;align-items:center}
+.gaterow b{font-family:var(--display);font-size:19px;font-weight:600;display:block}
+.gaterow .ess{font-family:var(--mono);font-size:10.5px;color:var(--gold);letter-spacing:.1em}
+.pips{display:flex;flex-wrap:wrap;gap:5px}
+.pip{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);padding:4px 9px;border-radius:2px;color:var(--muted)}
+.pip.on{border-color:var(--accent);color:var(--frost)}
+.tcard{border:1px solid var(--line);border-left:3px solid var(--pcColor);border-radius:3px;background:var(--ink-2);padding:18px 20px}
+.tcard h4{font-size:24px;letter-spacing:.02em}
+.tcard .now{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--pcColor);margin:4px 0 0}
+.tsel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.tsel label{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.tcard select{width:100%;background:#0a1118;border:1px solid var(--line);color:var(--frost);font-family:var(--body);font-size:14px;padding:7px 8px;border-radius:2px}
+.tcard select:focus{outline:2px solid var(--pcColor);outline-offset:-1px}
+.proof{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dotted var(--line);cursor:pointer;font-size:14px}
+.proof input{margin:3px 0 0;accent-color:var(--pcColor);width:16px;height:16px;flex:0 0 auto}
+.proof span b{font-weight:400;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:block}
+.ready{margin-top:14px;border:1px solid var(--pcColor);border-radius:2px;padding:11px 13px;font-size:14px}
+.ready.blocked{border-color:var(--line);color:var(--muted)}
+.ready button{margin-top:9px}
 /* ---------- cultivation ---------- */
 .tier{border-left:2px solid var(--line);padding:0 0 26px 22px;position:relative}
 .tier::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;background:var(--ink);border:2px solid var(--accent);border-radius:50%}
@@ -197,7 +218,7 @@ footer{border-top:1px solid var(--line);padding:26px 0 50px;color:var(--muted);f
     <button data-p="world" aria-current="true">The World</button>
     <button data-p="party">The Party</button>
     <button data-p="paths">Aether Paths</button>
-    <button data-p="cult">Cultivation</button>
+    <button data-p="level">Leveling Up</button>
     <button data-p="andrew">Andrew</button>
     <button data-p="hollow">The Hollow</button>
     <button data-p="dm">DM Screen</button>
@@ -255,11 +276,73 @@ footer{border-top:1px solid var(--line);padding:26px 0 50px;color:var(--muted);f
   <div class="ladder" id="ladder"></div>
 </section>
 
-<!-- ============ CULTIVATION ============ -->
-<section id="p-cult" class="page" hidden>
-  <h2 class="ptitle">The essence pathway</h2>
-  <p class="lede">Seven tiers from mortal to transcendent. The jumps between tiers are not gradual — each one multiplies what a body can hold. The party begins at Tier 2.</p>
-  <div id="tiers"></div>
+<!-- ============ LEVELING ============ -->
+<section id="p-level" class="page" hidden>
+  <h2 class="ptitle">Leveling up</h2>
+  <p class="lede">Two things grow, and they grow separately. <b style="font-weight:400;color:var(--frost)">Essence tier</b> is how much you can hold. <b style="font-weight:400;color:var(--frost)">Path rung</b> is what you can do with it. You climb rungs by earning them in play; you climb tiers by breaking through something in yourself.</p>
+
+  <div id="track"></div>
+
+  <hr class="rule">
+  <h3 style="font-size:28px;margin-bottom:6px">Which rungs your tier unlocks</h3>
+  <p style="color:var(--muted);max-width:64ch;margin-top:6px">A body that can't hold the essence can't hold the form. You never skip a rung, and you can't reach past your tier no matter how well you played.</p>
+  <div class="gate" id="gate"></div>
+
+  <hr class="rule">
+  <h3 style="font-size:28px;margin-bottom:18px">Climbing a rung: the three proofs</h3>
+  <p style="color:var(--muted);max-width:66ch;margin-top:-8px">No experience points. A rung is earned when a character has proved three things about the form they already have. Any order, across any number of sessions. The DM decides when one lands, and says so out loud at the table.</p>
+  <div class="grid g3" style="margin-top:22px">
+    <div class="panel"><p class="tag" style="color:var(--gold)">Proof I</p><h4 style="font-size:22px;margin:6px 0 8px">Use</h4><p style="font-size:15px;color:var(--muted);margin:0">Solve something with your form that it was obviously not designed for. Not the intended use — the clever one. A Bloomcaller who grows a rope. A Blink Assassin who blinks a falling child instead of themselves.</p></div>
+    <div class="panel"><p class="tag" style="color:var(--gold)">Proof II</p><h4 style="font-size:22px;margin:6px 0 8px">Cost</h4><p style="font-size:15px;color:var(--muted);margin:0">Pay something real for it, and mean it. Essence to empty, a wound that stays, a promise you now have to keep, a thing you wanted and gave up. If it didn't hurt, it wasn't the proof.</p></div>
+    <div class="panel"><p class="tag" style="color:var(--gold)">Proof III</p><h4 style="font-size:22px;margin:6px 0 8px">Understanding</h4><p style="font-size:15px;color:var(--muted);margin:0">Explain your own power to someone who doesn't have it — a party member, an NPC, or Andrew when he asks. The player has to actually say it. If they can't, they haven't got it yet.</p></div>
+  </div>
+
+  <div class="callout" style="margin-top:26px">
+    <p class="tag">The ascension</p>
+    <p style="margin:8px 0 0;font-size:16px">When the third proof lands, don't advance them mid-fight. Advance them at the top of the next session, out loud, with the new form named. Give it thirty seconds of ceremony. Then hand them <b style="font-weight:400">one signature ability</b> and <b style="font-weight:400">one new limitation</b> from the description, and let them find the rest in play.</p>
+  </div>
+
+  <hr class="rule">
+  <h3 style="font-size:28px;margin-bottom:18px">Climbing a tier: the breakthrough</h3>
+  <p style="color:var(--muted);max-width:66ch;margin-top:-8px">Tiers are rarer and cost more. Three conditions, all required, no exceptions and no partial credit.</p>
+  <ol class="steps" style="margin-top:22px">
+    <li><b>The essence threshold</b><p>They have to be at the top of their current tier. This is the easy part and the only part that is just a number.</p></li>
+    <li><b>The bottleneck</b><p>Every character has one thing standing between them and the next tier, and it is never a monster. Luca's is that he'd rather be right than be helped. Declan's is that he looks away. Jase's is that he thinks he's expendable. Theo's is that he thinks the oath only runs one direction. Name each kid's bottleneck privately, early, and make them meet it.</p></li>
+    <li><b>The surrender</b><p>Something has to be given up on the way through — a weapon, an ally's good opinion, a version of themselves. Ask the player to choose it. Never choose it for them.</p></li>
+  </ol>
+  <div class="panel" style="margin-top:8px">
+    <p class="tag">Failed breakthroughs</p>
+    <p style="font-size:15px;margin:8px 0 0">A character can attempt a breakthrough and fail. They don't lose the tier they have — they lose the attempt, and they can't try again until something has genuinely changed. Failed breakthroughs are the best story beats in the whole system. Let them happen.</p>
+  </div>
+
+  <hr class="rule">
+  <h3 style="font-size:28px;margin-bottom:6px">Essence thresholds</h3>
+  <p style="color:var(--muted);margin-top:6px">What each tier holds, and what changes on the way up.</p>
+  <div id="tiers" style="margin-top:22px"></div>
+
+  <hr class="rule">
+  <h3 style="font-size:28px;margin-bottom:18px">Pacing, for the DM</h3>
+  <div class="grid g2" style="align-items:start">
+    <div class="panel">
+      <p class="tag">How fast</p>
+      <ul style="padding-left:18px;font-size:15px;color:var(--muted);margin-bottom:0">
+        <li><b style="color:var(--frost);font-weight:400">Rungs 1&ndash;2</b> &mdash; two or three sessions each. Give these away fairly easily; they're learning the system.</li>
+        <li><b style="color:var(--frost);font-weight:400">Rungs 3&ndash;6</b> &mdash; four to six sessions each. This is the middle of the campaign and where most of it lives.</li>
+        <li><b style="color:var(--frost);font-weight:400">Rungs 7&ndash;10</b> &mdash; an arc each. These should feel like they cost a year of someone's life.</li>
+        <li><b style="color:var(--frost);font-weight:400">Tiers</b> &mdash; roughly one per act. Four tier jumps is a whole campaign.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <p class="tag">Keeping four kids level</p>
+      <ul style="padding-left:18px;font-size:15px;color:var(--muted);margin-bottom:0">
+        <li>Track proofs per character, not per party. They will drift, and that's fine.</li>
+        <li>If someone falls two rungs behind, hand them a session where only their form works.</li>
+        <li>Never advance someone as a consolation prize. It cheapens the three who earned it.</li>
+        <li>Andrew can tell a player which proof they're missing. He will not tell them how to get it.</li>
+        <li>A quiet player who never announces anything is usually sitting on Proof I already. Notice it for them.</li>
+      </ul>
+    </div>
+  </div>
 </section>
 
 <!-- ============ ANDREW ============ -->
@@ -381,7 +464,7 @@ footer{border-top:1px solid var(--line);padding:26px 0 50px;color:var(--muted);f
 
 </main>
 
-<footer class="wrap">Aerath Kai · a home campaign · dice courtesy of a god who is not paying attention<br><span style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;opacity:.55">BUILD 6 · EDITABLE PARTY SHEETS</span></footer>
+<footer class="wrap">Aerath Kai · a home campaign · dice courtesy of a god who is not paying attention<br><span style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;opacity:.55">BUILD 7 · LEVELING SYSTEM</span></footer>
 
 <script>
 /* ---------------- data ---------------- */
@@ -605,6 +688,7 @@ function saveParty(){
 async function loadParty(){
   try{ const v=await Store.get(PKEY); if(v){ const p=JSON.parse(v); if(Array.isArray(p)&&p.length) party=p; } }
   catch(e){ /* first run, or storage unavailable */ }
+  await loadLevels();
   renderParty();
 }
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -658,6 +742,7 @@ function renderParty(){
       </div>
     </article>`;
   }).join('') + (editing?`<button class="addcard" data-a="addchar">+ Add a character</button>`:'');
+  if(typeof renderTrack==='function') renderTrack();
 }
 
 /* text edits: update in place, no re-render, so focus is never lost */
@@ -751,7 +836,23 @@ function showPath(i){
 rail.addEventListener('click',e=>{const b=e.target.closest('.crys'); if(b) showPath(+b.dataset.i);});
 showPath(7);
 
-/* ---------------- tiers ---------------- */
+/* ---------------- leveling ---------------- */
+const TIERNAMES=['Mortal','Awakened','Initiate','Profound','Ascendant','Sovereign','Transcendent'];
+const MAXRUNG=[0,0,2,4,6,8,10];   // highest path rung each essence tier can hold
+const LKEY='aerath:levels:v1';
+let levels={};
+
+document.getElementById('gate').innerHTML = TIERNAMES.map((n,ti)=>{
+  const hi=MAXRUNG[ti], lo=ti>=2?MAXRUNG[ti-1]+1:0;
+  const rng=TIERS[ti].r.replace('Essence ','');
+  return `<div class="gaterow">
+    <div><b>Tier ${ti} &mdash; ${n}</b><span class="ess">${rng}</span></div>
+    <div class="pips">${hi===0
+      ? '<span class="pip">no path form yet</span>'
+      : Array.from({length:10},(_,i)=>`<span class="pip${i+1>=lo&&i+1<=hi?' on':''}">${String(i+1).padStart(2,'0')}</span>`).join('')}</div>
+  </div>`;
+}).join('');
+
 document.getElementById('tiers').innerHTML = TIERS.map(t=>
   `<div class="tier">
      <p class="rng">${t.r}</p>
@@ -760,6 +861,64 @@ document.getElementById('tiers').innerHTML = TIERS.map(t=>
      <div class="minor">${t.m.map(m=>`<span>${m}</span>`).join('')}</div>
      ${t.g?`<p class="gap">${t.g}</p>`:''}
    </div>`).join('');
+
+/* ---- per-character advancement tracker ---- */
+const PROOFS=[['Use','Solved something the form was not built for.'],
+              ['Cost','Paid something real for it.'],
+              ['Understanding','Explained it out loud to someone without it.']];
+async function loadLevels(){
+  try{ const v=await Store.get(LKEY); if(v) levels=JSON.parse(v)||{}; }catch(e){ levels={}; }
+}
+function saveLevels(){
+  clearTimeout(saveLevels._t);
+  saveLevels._t=setTimeout(()=>{ Store.set(LKEY,JSON.stringify(levels)).catch(()=>{}); },400);
+}
+function lvl(name){
+  if(!levels[name]) levels[name]={tier:2,rung:1,proofs:[false,false,false]};
+  return levels[name];
+}
+function renderTrack(){
+  const el=document.getElementById('track'); if(!el) return;
+  el.innerHTML='<div class="grid g2">'+party.map(p=>{
+    const path=PATHS.find(x=>x.k===p.path)||PATHS[0];
+    const st=lvl(p.name);
+    const pi=PATHS.indexOf(path);
+    const cur = st.rung>0 ? LADDER[st.rung-1][pi] : null;
+    const nxt = st.rung<10 ? LADDER[st.rung][pi] : null;
+    const cap = MAXRUNG[st.tier];
+    const done = st.proofs.every(Boolean);
+    const canAdvance = done && st.rung<10 && st.rung+1<=cap;
+    let msg;
+    if(st.rung>=10) msg='<b style="font-weight:400">Top of the path.</b> There is nothing above this.';
+    else if(canAdvance) msg=`<b style="font-weight:400">Ready to ascend \u2192 ${nxt}</b><br><span style="color:var(--muted)">Do it at the top of the next session, not mid-fight.</span>`;
+    else if(done) msg=`All three proofs earned, but <b style="font-weight:400">Tier ${st.tier} caps them at rung ${cap||'\u2014'}</b>. They need a breakthrough before the next form will hold.`;
+    else msg=`<span style="color:var(--muted)">${3-st.proofs.filter(Boolean).length} proof(s) still to earn before ${nxt||'the next form'}.</span>`;
+    return `<div class="tcard" style="--pcColor:${path.c}" data-name="${p.name.replace(/"/g,'&quot;')}">
+      <h4>${p.name}</h4>
+      <p class="now">${cur?cur:'no form yet'} \u00b7 ${path.name}</p>
+      <div class="tsel">
+        <div><label>Essence tier</label><select data-t="tier">${TIERNAMES.map((n,i)=>`<option value="${i}"${i===st.tier?' selected':''}>${i} \u2014 ${n}</option>`).join('')}</select></div>
+        <div><label>Path rung</label><select data-t="rung">${Array.from({length:11},(_,i)=>`<option value="${i}"${i===st.rung?' selected':''}>${i===0?'\u2014 none':String(i).padStart(2,'0')+' \u00b7 '+LADDER[i-1][pi]}</option>`).join('')}</select></div>
+      </div>
+      ${PROOFS.map(([t,d],i)=>`<label class="proof"><input type="checkbox" data-t="proof" data-i="${i}"${st.proofs[i]?' checked':''}><span><b>Proof ${['I','II','III'][i]} \u00b7 ${t}</b>${d}</span></label>`).join('')}
+      <div class="ready${canAdvance?'':' blocked'}">${msg}${canAdvance?'<br><button class="act" data-t="adv">Advance to rung '+String(st.rung+1).padStart(2,'0')+'</button>':''}</div>
+    </div>`;
+  }).join('')+'</div>';
+}
+document.getElementById('track').addEventListener('change',e=>{
+  const card=e.target.closest('.tcard'); if(!card) return;
+  const st=lvl(card.dataset.name), t=e.target.dataset.t;
+  if(t==='tier') st.tier=+e.target.value;
+  else if(t==='rung') st.rung=+e.target.value;
+  else if(t==='proof') st.proofs[+e.target.dataset.i]=e.target.checked;
+  saveLevels(); renderTrack();
+});
+document.getElementById('track').addEventListener('click',e=>{
+  if(e.target.dataset.t!=='adv') return;
+  const st=lvl(e.target.closest('.tcard').dataset.name);
+  st.rung=Math.min(10,st.rung+1); st.proofs=[false,false,false];
+  saveLevels(); renderTrack();
+});
 
 /* ---------------- dice ---------------- */
 function luckLine(v,max){
